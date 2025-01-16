@@ -93,8 +93,7 @@ There is a `day_calc.py` script that can be used to calculate what your initial 
 Simply take note of the date of the last day of the current week you are tracking along with the week number to give you your starting date - this can then be used in the config file.
 
 ```sh
-$ python script.py --date 2025-01- --week 2
-python day_calc.py --date "2025-01-26" --week 2
+$ python day_calc.py --date "2025-01-26" --week 2
 Week 2 - Day 7: Sunday - 2025-01-26
 Week 2 - Day 6: Saturday - 2025-01-25
 Week 2 - Day 5: Friday - 2025-01-24
