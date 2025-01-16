@@ -1,0 +1,32 @@
+[general]
+# This will be used to construct the name of the sheet in google sheets "Week 1", for example
+start_week=1
+
+# Date of the first day in the week defined above yyyy-mm-dd
+start_date=2025-01-13
+
+[whoop]
+# Whether or not to get data from Whoop set to 1 to enable
+enabled=1
+
+# Whoop username and password - Note if this is enabled but the either of the fields are blank you will be prompted to enter them
+username=
+password=
+
+[gsheet]
+# The location of the json file that contains the mapping of data points to cells
+json=spreadsheet_map.json
+
+# This is the credentials file that is generated when you create a service account in google cloud
+creds=
+
+# This is the URL of the google sheet
+url=
+
+[mfp]
+# Whether or not to get data from myfitnesspal set to 1 to enable
+enabled=1
+
+# Which browser to get myfitnesspal data from the options are currently: chrome, firefox, edge, opera, safari, chromium
+# Note: Only chrome has had extensive testing
+browser=chrome
