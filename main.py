@@ -77,17 +77,17 @@ def latest_measures(client):
 
 def get_browser_cookies(browser, domain):
     if browser == "chrome":
-        return browser_cookie3.chrome()
+        return browser_cookie3.chrome(domain_name=domain)
     elif browser == "firefox":
-        return browser_cookie3.firefox()
+        return browser_cookie3.firefox(domain_name=domain)
     elif browser == "edge":
-        return browser_cookie3.edge()
+        return browser_cookie3.edge(domain_name=domain)
     elif browser == "opera":
-        return browser_cookie3.opera()
+        return browser_cookie3.opera(domain_name=domain)
     elif browser == "safari":
-        return browser_cookie3.safari()
+        return browser_cookie3.safari(domain_name=domain)
     elif browser == "chromium":
-        return browser_cookie3.chromium()
+        return browser_cookie3.chromium(domain_name=domain)
     else:
         raise Exception("Invalid browser specified!")
 
@@ -126,17 +126,28 @@ def get_mfp_day_data(mfp_client, current_date):
 
 def get_whoop_day_data(whoop_client, date):
     cycle_date = date.strftime("%Y-%m-%d 12:00:00")
-    day_cycles = whoop_client.get_cycle_collection(start_date=cycle_date, end_date=cycle_date)
 
     # Sleep
     # Get second entry of sleep data which is going to from the previous day to this one
     sleep_data_response = whoop_client.get_sleep_collection(start_date=cycle_date, end_date=cycle_date)
 
     if len(sleep_data_response) < 2:
+        sleep_data = sleep_data_response[0]
+        sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
+        sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
+        wake_time = datetime.datetime.strptime(sleep_data["end"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
+        seconds, milliseconds = divmod(sleep_duration_milli, 1000)
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
+        sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
+
+    elif len(sleep_data_response) == 0:
         sleep_efficiency = ""
         sleep_duration = ""
         sleep_time = ""
         wake_time = ""
+
     else:
         sleep_data = sleep_data_response[1]
         sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
@@ -152,6 +163,11 @@ def get_whoop_day_data(whoop_client, date):
     recovery_data_response = whoop_client.get_recovery_collection(start_date=cycle_date, end_date=cycle_date)
 
     if len(recovery_data_response) < 2:
+        recovery_data = recovery_data_response[0]
+        hrv = round(recovery_data["score"]["hrv_rmssd_milli"])
+        rhr = round(recovery_data["score"]["resting_heart_rate"])
+        recovery = round(recovery_data["score"]["recovery_score"])
+    elif len(recovery_data_response) == 0:
         hrv = ""
         rhr = ""
         recovery = ""
@@ -166,6 +182,8 @@ def get_whoop_day_data(whoop_client, date):
     workouts_data_response = whoop_client.get_cycle_collection(start_date=cycle_date, end_date=cycle_date)
 
     if len(workouts_data_response) < 2:
+        strain = round(workouts_data_response[0]["score"]["strain"], 1)
+    elif len(workouts_data_response) == 0:
         strain = ""
     else:
         strain = round(workouts_data_response[1]["score"]["strain"], 1)
