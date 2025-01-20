@@ -131,7 +131,13 @@ def get_whoop_day_data(whoop_client, date):
     # Get second entry of sleep data which is going to from the previous day to this one
     sleep_data_response = whoop_client.get_sleep_collection(start_date=cycle_date, end_date=cycle_date)
 
-    if len(sleep_data_response) < 2:
+    if len(sleep_data_response) == 0:
+        sleep_efficiency = ""
+        sleep_duration = ""
+        sleep_time = ""
+        wake_time = ""
+
+    elif len(sleep_data_response) == 1:
         sleep_data = sleep_data_response[0]
         sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
         sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
@@ -141,12 +147,6 @@ def get_whoop_day_data(whoop_client, date):
         hours, minutes = divmod(minutes, 60)
         sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
         sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
-
-    elif len(sleep_data_response) == 0:
-        sleep_efficiency = ""
-        sleep_duration = ""
-        sleep_time = ""
-        wake_time = ""
 
     else:
         sleep_data = sleep_data_response[1]
@@ -162,29 +162,32 @@ def get_whoop_day_data(whoop_client, date):
     # Recovery
     recovery_data_response = whoop_client.get_recovery_collection(start_date=cycle_date, end_date=cycle_date)
 
-    if len(recovery_data_response) < 2:
+    if len(recovery_data_response) == 0:
+        hrv = ""
+        rhr = ""
+        recovery = ""
+
+    if len(recovery_data_response) == 1:
         recovery_data = recovery_data_response[0]
         hrv = round(recovery_data["score"]["hrv_rmssd_milli"])
         rhr = round(recovery_data["score"]["resting_heart_rate"])
         recovery = round(recovery_data["score"]["recovery_score"])
-    elif len(recovery_data_response) == 0:
-        hrv = ""
-        rhr = ""
-        recovery = ""
+
     else:
         recovery_data = recovery_data_response[1]
         hrv = round(recovery_data["score"]["hrv_rmssd_milli"])
         rhr = round(recovery_data["score"]["resting_heart_rate"])
         recovery = round(recovery_data["score"]["recovery_score"])
 
-
     # Strain
     workouts_data_response = whoop_client.get_cycle_collection(start_date=cycle_date, end_date=cycle_date)
 
-    if len(workouts_data_response) < 2:
-        strain = round(workouts_data_response[0]["score"]["strain"], 1)
-    elif len(workouts_data_response) == 0:
+    if len(workouts_data_response) == 0:
         strain = ""
+
+    if len(workouts_data_response) == 1:
+        strain = round(workouts_data_response[0]["score"]["strain"], 1)
+
     else:
         strain = round(workouts_data_response[1]["score"]["strain"], 1)
 
@@ -271,10 +274,14 @@ def run():
 
     week = int(start_week) - 1
     cells_to_update = []
+    reached_today = False
 
     while True:
         week += 1
         time.sleep(0.75)  # Prevents rate limiting
+
+        if reached_today:
+            break
 
         # Attempt to open the week tab
         try:
@@ -326,8 +333,18 @@ def run():
                     #tab.update(coord, mfp_data[entry])
                     cells_to_update.append(create_cell(coord, mfp_data[entry]))
 
-            # Next day
-            current_date += timedelta(days=1)
+            if day < 8:
+                # Next day
+                current_date += timedelta(days=1)
+
+                # If the next current date is greater than todays date stop
+                if current_date > datetime.datetime.today().date():
+                    reached_today = True
+                    logging.info("Reached today's date, stopping")
+                    break
+
+        if reached_today:
+            break
 
         # Update the spreadsheet for this week
         tab.update_cells(cells_to_update)
