@@ -343,11 +343,12 @@ def run():
                     logging.info("Reached today's date, stopping")
                     break
 
+        # Update the spreadsheet for this week
+        tab.update_cells(cells_to_update)
+
         if reached_today:
             break
 
-        # Update the spreadsheet for this week
-        tab.update_cells(cells_to_update)
 
 if __name__ == '__main__':
     run()
