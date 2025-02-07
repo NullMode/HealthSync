@@ -25,6 +25,7 @@ INI = "health.ini"
 TEMPLATE_INI = "health.ini.template"
 SPREADSHEET_MAP = "spreadsheet_map.json"
 SPREADSHEET_MAP_TEMPLATE = "spreadsheet_map.json.template"
+WHOOP_ERROR = "N/A - Whoop Error"
 
 
 def create_cell(coordinate, value):
@@ -56,10 +57,13 @@ def get_measures(client, id, lower_date):
                     stop = True
                     break
                 data[item['date']] = item['value']
-        else:
-            print('oops', len(page))
-        if stop or re.search('"has_more":(.*?),', page)[1] == 'false':
-            break
+
+        try:
+            if stop or re.search('"has_more":(.*?),', page)[1] == 'false':
+                break
+        except TypeError:
+            logging.error("Error getting information from mfp - you might need to authenticate again!")
+            sys.exit(1)
 
     return data
 
@@ -139,35 +143,61 @@ def get_whoop_day_data(whoop_client, date):
 
     elif len(sleep_data_response) == 1:
         sleep_data = sleep_data_response[0]
-        sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
+
+        if not sleep_data["score"]:
+            start = sleep_data["start"]
+            end = sleep_data["end"]
+            sleep_duration_time = datetime.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.%fZ") - datetime.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.%fZ")
+            total_seconds = int(sleep_duration_time.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            sleep_duration = f"{hours:02}:{minutes:02}"
+            sleep_efficiency = WHOOP_ERROR
+        else:
+            sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
+            seconds, milliseconds = divmod(sleep_duration_milli, 1000)
+            minutes, seconds = divmod(seconds, 60)
+            hours, minutes = divmod(minutes, 60)
+            sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
+            sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
+
         sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
         wake_time = datetime.datetime.strptime(sleep_data["end"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
-        seconds, milliseconds = divmod(sleep_duration_milli, 1000)
-        minutes, seconds = divmod(seconds, 60)
-        hours, minutes = divmod(minutes, 60)
-        sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
-        sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
+
 
     else:
         sleep_data = sleep_data_response[1]
-        sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
+
+        if not sleep_data["score"]:
+            start = sleep_data["start"]
+            end = sleep_data["end"]
+            sleep_duration_time = datetime.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.%fZ") - datetime.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.%fZ")
+            total_seconds = int(sleep_duration_time.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            sleep_duration = f"{hours:02}:{minutes:02}"
+            sleep_efficiency = WHOOP_ERROR
+
+        else:
+            sleep_duration_milli = sleep_data["score"]["stage_summary"]["total_light_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_rem_sleep_time_milli"] + sleep_data["score"]["stage_summary"]["total_slow_wave_sleep_time_milli"]
+            seconds, milliseconds = divmod(sleep_duration_milli, 1000)
+            minutes, seconds = divmod(seconds, 60)
+            hours, minutes = divmod(minutes, 60)
+            sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
+            sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
+
         sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
         wake_time = datetime.datetime.strptime(sleep_data["end"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
-        seconds, milliseconds = divmod(sleep_duration_milli, 1000)
-        minutes, seconds = divmod(seconds, 60)
-        hours, minutes = divmod(minutes, 60)
-        sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
-        sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
 
     # Recovery
     recovery_data_response = whoop_client.get_recovery_collection(start_date=cycle_date, end_date=cycle_date)
 
     if len(recovery_data_response) == 0:
-        hrv = ""
-        rhr = ""
-        recovery = ""
+        hrv = WHOOP_ERROR
+        rhr = WHOOP_ERROR
+        recovery = WHOOP_ERROR
 
-    if len(recovery_data_response) == 1:
+    elif len(recovery_data_response) == 1:
         recovery_data = recovery_data_response[0]
         hrv = round(recovery_data["score"]["hrv_rmssd_milli"])
         rhr = round(recovery_data["score"]["resting_heart_rate"])
