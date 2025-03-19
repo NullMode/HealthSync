@@ -11,7 +11,7 @@ cryptography==44.0.1
 google-auth==2.16.0
 google-auth-oauthlib==0.8.0
 gspread==5.7.2
-idna==3.4
+idna==3.7
 importlib-metadata==6.0.0
 jaraco.classes==3.2.3
 jeepney==0.8.0
