@@ -375,6 +375,7 @@ def run():
 
         # Update the spreadsheet for this week
         tab.update_cells(cells_to_update)
+        cells_to_update = []
 
         if reached_today:
             break
