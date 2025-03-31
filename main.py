@@ -40,6 +40,7 @@ def convert_utc_to_local(time_str: str, timezone_str: str) -> str:
     local_dt = utc_dt.astimezone(ZoneInfo(timezone_str))
     return local_dt.strftime("%H:%M")
 
+
 def create_cell(coordinate, value):
     """
     Converts an A1-style coordinate and a value into a gspread Cell object.
@@ -141,7 +142,10 @@ def get_mfp_day_data(mfp_client, current_date):
 
 
 def get_whoop_day_data(whoop_client, date, timezone):
-    cycle_date = date.strftime("%Y-%m-%d 12:00:00")
+    naive_dt = datetime.datetime.combine(date, datetime.time(12, 0))
+    local_dt = naive_dt.replace(tzinfo=ZoneInfo(timezone))
+    utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+    cycle_date = utc_dt.strftime("%Y-%m-%d %H:%M:%S")
 
     # Sleep
     # Get second entry of sleep data which is going to from the previous day to this one
