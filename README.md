@@ -35,9 +35,11 @@ You will be required to make changes to both of these files - more information o
 
 Within `health.ini` you will need to provide the following information:
 
-start_date=2025-01-13
-start_week=1
-timezone=Europe/London
+- `start_date` - Example: `2025-01-13`
+- `start_week` - Example: `1`
+- `timezone` - Example: `Europe/London`
+
+The `start_date` is the date of the first day of the first week you want to track. The `start_week` is the week number of the first week you want to track. The `timezone` is the timezone you are in.
 
 ### Spreadsheet Map Template
 
