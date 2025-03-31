@@ -1,4 +1,5 @@
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 from itertools import count
 from whoop import WhoopClient
 from gspread.cell import Cell
@@ -27,6 +28,17 @@ SPREADSHEET_MAP = "spreadsheet_map.json"
 SPREADSHEET_MAP_TEMPLATE = "spreadsheet_map.json.template"
 WHOOP_ERROR = "N/A - Whoop Error"
 
+
+def convert_utc_to_local(time_str: str, timezone_str: str) -> str:
+    """
+    Converts a UTC time string to a local time string.
+    :param time_str:
+    :param timezone_str:
+    :return:
+    """
+    utc_dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=ZoneInfo("UTC"))
+    local_dt = utc_dt.astimezone(ZoneInfo(timezone_str))
+    return local_dt.strftime("%H:%M")
 
 def create_cell(coordinate, value):
     """
@@ -128,7 +140,7 @@ def get_mfp_day_data(mfp_client, current_date):
     }
 
 
-def get_whoop_day_data(whoop_client, date):
+def get_whoop_day_data(whoop_client, date, timezone):
     cycle_date = date.strftime("%Y-%m-%d 12:00:00")
 
     # Sleep
@@ -161,9 +173,8 @@ def get_whoop_day_data(whoop_client, date):
             sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
             sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
 
-        sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
-        wake_time = datetime.datetime.strptime(sleep_data["end"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
-
+        sleep_time = convert_utc_to_local(sleep_data["start"], timezone)
+        wake_time = convert_utc_to_local(sleep_data["end"], timezone)
 
     else:
         sleep_data = sleep_data_response[1]
@@ -186,8 +197,8 @@ def get_whoop_day_data(whoop_client, date):
             sleep_duration = datetime.time(hour=hours, minute=minutes, second=seconds).strftime("%H:%M")
             sleep_efficiency = round(sleep_data["score"]["sleep_efficiency_percentage"]) / 100
 
-        sleep_time = datetime.datetime.strptime(sleep_data["start"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
-        wake_time = datetime.datetime.strptime(sleep_data["end"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%H:%M")
+        sleep_time = convert_utc_to_local(sleep_data["start"], timezone)
+        wake_time = convert_utc_to_local(sleep_data["end"], timezone)
 
     # Recovery
     recovery_data_response = whoop_client.get_recovery_collection(start_date=cycle_date, end_date=cycle_date)
@@ -271,6 +282,22 @@ def run():
 
     start_date = config["general"]["start_date"]
     start_week = config["general"]["start_week"]
+    timezone = config["general"]["timezone"]
+
+    if not start_date:
+        start_date = False
+        logging.error("Start date not set in config")
+
+    if not start_week:
+        start_week = False
+        logging.error("Start week not set in config")
+
+    if not timezone:
+        timezone = False
+        logging.error("Timezone not set in config - should be in the format of 'Europe/London'")
+
+    if not all([start_date, start_week, timezone]):
+        sys.exit(1)
 
     # Google Sheets
     spreadsheet_mapping = json.load(open(config["gsheet"]["json"], "r"))
@@ -336,7 +363,7 @@ def run():
 
             # Get the data from whoop
             if whoop_enabled:
-                whoop_data = get_whoop_day_data(whoop_client, current_date)
+                whoop_data = get_whoop_day_data(whoop_client, current_date, timezone)
                 for entry in whoop_data:
                     try:
                         coord = spreadsheet_mapping[str(day)][0]["whoop"][entry]

@@ -1,9 +1,11 @@
 [general]
 # This will be used to construct the name of the sheet in google sheets "Week 1", for example
-start_week=1
 
 # Date of the first day in the week defined above yyyy-mm-dd
-start_date=2025-01-13
+start_date=
+
+# The timezone you live in - to normalize the data from whoop
+timezone=
 
 [whoop]
 # Whether or not to get data from Whoop set to 1 to enable
@@ -28,5 +30,5 @@ url=
 enabled=1
 
 # Which browser to get myfitnesspal data from the options are currently: chrome, firefox, edge, opera, safari, chromium
-# Note: Only chrome has had extensive testing
-browser=chrome
+# Note: Only chrome & Firefox has had extensive testing
+browser=firefox

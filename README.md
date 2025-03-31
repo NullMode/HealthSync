@@ -24,6 +24,21 @@ You may get some errors here that indicate you need to install some system packa
 
 ## Setup and Config
 
+When running the script for the first time two files will be generated in the root of the project:
+
+- `health.ini`
+- `spreadsheet_map.json`
+
+You will be required to make changes to both of these files - more information on this below.
+
+### General
+
+Within `health.ini` you will need to provide the following information:
+
+start_date=2025-01-13
+start_week=1
+timezone=Europe/London
+
 ### Spreadsheet Map Template
 
 Running the script for the first time will generate a `spreadsheet_map.json` file for your review. This file is used to map the data from the various sources to the columns in the spreadsheet.
