@@ -4,6 +4,16 @@ This is heavily inspired by the work in https://github.com/blueostrich18/health 
 
 This script is designed to pull data from various sources and populate a Google Sheet with the data.
 
+The script works by going through sheets labelled "Week X" where X is the week number. The script will then go through each day of the week and pull data from the various sources and populate the sheet with the data.
+
+The sheet checks a cell to see if it is populated with "Y" indicating that it has been completed. If it is not populated with "Y" then the script will pull the data from the various sources and populate the sheet with the data.
+
+The script will then check the next week and repeat the process until it reaches today's date or until it runs out of sheets to process.
+
+There is a mapping file that is used to map the data from the various sources to the columns in the spreadsheet. The mapping file is a JSON file that contains the mapping for each source.
+
+See below for more details on how to set up the script and the mapping file.
+
 # Requirements
 
 - Python 3.11
@@ -39,7 +49,11 @@ Within `health.ini` you will need to provide the following information:
 - `start_week` - Example: `1`
 - `timezone` - Example: `Europe/London`
 
-The `start_date` is the date of the first day of the first week you want to track. The `start_week` is the week number of the first week you want to track. The `timezone` is the timezone you are in.
+The `start_date` is the date of the first day of the first week you want to track. Use the `day_calc.py` script to help you calculate this if you are starting from a week that is not 1 (see below).
+
+The `start_week` is the week number of the first week you want to track. Since the script always starts at 1, you may want to change this to a higher number eventually to speed up the scripts execution.
+
+The `timezone` is the timezone you are in, this is used to help covert dates from Whoop to the correct timezone.
 
 ### Spreadsheet Map Template
 

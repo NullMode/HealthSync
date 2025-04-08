@@ -303,6 +303,12 @@ def run():
     if not all([start_date, start_week, timezone]):
         sys.exit(1)
 
+    try:
+        start_week = int(start_week)
+    except ValueError:
+        logging.error("start_week must be an integer")
+        sys.exit(1)
+
     # Google Sheets
     spreadsheet_mapping = json.load(open(config["gsheet"]["json"], "r"))
     gc = gspread.service_account(config["gsheet"]["creds"])
@@ -333,9 +339,17 @@ def run():
     # convert start_date to datetime
     current_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
 
-    week = int(start_week) - 1
+    week = 0  # Start at week 0 to allow for the loop logic to work
     cells_to_update = []
     reached_today = False
+
+    # If start week is greater than, 1 fast forward to the current week
+    if start_week > week + 1:
+        logging.info("Start week is greater than current week, fast forwarding")
+        for i in range(1, start_week):
+            # Increment the date by 7 days
+            current_date += timedelta(days=7)
+            week += 1
 
     while True:
         week += 1

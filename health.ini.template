@@ -2,10 +2,15 @@
 # This will be used to construct the name of the sheet in google sheets "Week 1", for example
 
 # Date of the first day in the week defined above yyyy-mm-dd
+# This is used to calculate the week number and should never be changed once setup
+# Use the day_calc.py script to calculate the date for whatever week you are currently on
 start_date=
 
 # The timezone you live in - to normalize the data from whoop
 timezone=
+
+# The week you want to start the script from.
+start_week
 
 [whoop]
 # Whether or not to get data from Whoop set to 1 to enable
