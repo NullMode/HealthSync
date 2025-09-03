@@ -34,10 +34,11 @@ You may get some errors here that indicate you need to install some system packa
 
 ## Setup and Config
 
-When running the script for the first time two files will be generated in the root of the project:
+When running the script for the first time three files will be generated in the root of the project:
 
 - `health.ini`
 - `spreadsheet_map.json`
+- `config.json`
 
 You will be required to make changes to both of these files - more information on this below.
 
@@ -55,7 +56,7 @@ The `start_week` is the week number of the first week you want to track. Since t
 
 The `timezone` is the timezone you are in, this is used to help covert dates from Whoop to the correct timezone.
 
-### Spreadsheet Map Template
+### Spreadsheet Map Template (spreadsheet_map.json)
 
 Running the script for the first time will generate a `spreadsheet_map.json` file for your review. This file is used to map the data from the various sources to the columns in the spreadsheet.
 
@@ -68,17 +69,14 @@ Inspecting the generated file will show you what information is being pulled fro
 
 Currently, all data points from the services are in the map.
 
-### Credential File
+### Credential File (health.ini)
 
-Running the script for the first time will generate a `health.ini` file for your review. This file is used to store the credentials for the various services, as well as other general information.
+Running the script for the first time will generate a `health.ini` file for your review. This file is used to store the credentials for various services, as well as other general information.
 
 More details below.
 
 Information on the values needed can also be found in the `health.ini` file, or the `health.ini.template` file.
 
-#### Whoop
-
-This uses an old library for interaction with whoop using your username and password. If you don't supply them in the `health.ini` file you will be prompted for them if it is enabled.
 
 #### MyFitnessPal
 
@@ -93,7 +91,7 @@ There is support for:
 - safari
 - chromium
 
-Note: extensive testing has only been performed with Chrome.
+Note: extensive testing has only been performed with Chrome & Firefox.
 
 #### Google
 
@@ -102,6 +100,22 @@ The script uses the Google Sheets API to interact with the spreadsheet. You will
 Instructions how to do this can be found here - https://support.google.com/a/answer/7378726
 
 You will need to share the spreadsheet with the email address of the service account (found in the JSON key file).
+
+### Whoop Creds (config.json)
+
+In order to connect to Whoop you will need to login to the developer portal and create an application.
+
+Create a new app here - https://developer-dashboard.whoop.com/
+
+- Fill out the various fields for a call back URL something liek http://localhost:1234 is fine. 
+- Select all scopes.
+- No web hooks are required
+
+You will then need to use the `client id`, `client secret` and the `redirect url` in the `config.json` file.
+
+On first one you will need to authenticate to whoop and it will redirect to the localhost provided above (if used). You will need to copy and paste this url into the tool when requested. Another file called `whoop_credentials.json` will be created which will store your current access token and refresh token among other things.
+
+The underlying library used here is called Whoopy using my fork with some updates to the recovery endpoint (https://github.com/NullMode/whoopy)
 
 ## Running
 
@@ -114,6 +128,8 @@ python main.py
 You may be prompted to provide credentials if you didn't provide them in the INI file.
 
 You may also be prompted for credentials to access the cookie store on your machine.
+
+You will be prompted to authenticate to whoop if enabled.
 
 On Windows you may need to close the browser which is authenticated with MyFitnessPal before running the script.
 

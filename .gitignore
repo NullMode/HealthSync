@@ -6,3 +6,6 @@ __pycache__/
 
 spreadsheet_map.json
 health.ini
+
+whoop_credentials.json
+config.json

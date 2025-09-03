@@ -16,9 +16,10 @@ start_week
 # Whether or not to get data from Whoop set to 1 to enable
 enabled=1
 
-# Whoop username and password - Note if this is enabled but the either of the fields are blank you will be prompted to enter them
-username=
-password=
+# Whoop oauth creds
+client_id=
+client_secret=
+redirect_url=
 
 [gsheet]
 # The location of the json file that contains the mapping of data points to cells
