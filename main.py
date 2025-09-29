@@ -34,7 +34,7 @@ WHOOP_ERROR = "N/A - Whoop Error"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WHOOP_CREDS_FILE_TMP = "whoop_credentials.json"
 WHOOP_CONFIG_FILE_TMP = "config.json"
-WHOOP_CONFIG_TEMPLATE = "config.json"
+WHOOP_CONFIG_TEMPLATE = "config.json.template"
 WHOOP_CREDS_FILE = os.path.join(SCRIPT_DIR, WHOOP_CREDS_FILE_TMP)
 WHOOP_CONFIG_FILE = os.path.join(SCRIPT_DIR, WHOOP_CONFIG_FILE_TMP)
 
@@ -184,6 +184,9 @@ def get_whoop_day_data(whoop_client: whoopy.WhoopClient, date, timezone):
     utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
 
     # Work out the correct cycle dates
+
+    # TODO there's a bug in here that actualy gets the day before in some cases. Noteaby the earlier the time the more
+    # TODO likely this is to happen it seems
     window_start = utc_dt - timedelta(days=1)
     window_end = utc_dt + timedelta(days=1)
     cycles = whoop_client.cycles.get_all(start=window_start, end=window_end)
@@ -347,7 +350,7 @@ def run():
             with open(WHOOP_CONFIG_FILE_TMP, 'r') as f:
                 whoop_config = json.load(f)
 
-            whoop_client = WhoopClient.from_token(
+            whoop_client: WhoopClient = WhoopClient.from_token(
                 access_token=whoop_creds["access_token"],
                 refresh_token=whoop_creds["refresh_token"],
                 client_id=whoop_config["client_id"],
@@ -360,7 +363,8 @@ def run():
                 os.remove(WHOOP_CREDS_FILE)
                 whoop_client = None
         else:
-            shutil.copy(WHOOP_CONFIG_TEMPLATE, WHOOP_CONFIG_FILE_TMP)
+            if not os.path.exists(WHOOP_CONFIG_FILE):
+                shutil.copy(WHOOP_CONFIG_TEMPLATE, WHOOP_CONFIG_FILE_TMP)
 
         if not whoop_client:
             with open(WHOOP_CONFIG_FILE_TMP, 'r') as f:
