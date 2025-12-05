@@ -58,7 +58,7 @@ time-helper==0.3.1
 typing-inspection==0.4.1
 typing_extensions==4.12.2
 tzdata==2025.2
-urllib3==1.26.19
+urllib3==2.6.0
 wcwidth==0.2.6
 whoopy @ git+https://github.com/NullMode/whoopy.git@8b530a01dbfcffdffbc874a4da09e71e5a9edd5c
 yarl==1.20.1
